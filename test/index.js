@@ -50,7 +50,7 @@ describe("# ", function() {
 				should.not.exist(err);
 				should.exist(queue);
 
-				var sub = queue.subscribe('event', true, function(message) {
+				var sub = queue.subscribe('event', function(message) {
 
 				});
 
@@ -75,7 +75,7 @@ describe("# ", function() {
 				should.not.exist(err);
 				should.exist(queue);
 
-				var sub = queue.subscribe('event', true, function(message) {
+				var sub = queue.subscribe('event', function(message) {
 					expect(message).to.equal('hello');
 					connection.close();
 					done();
@@ -104,7 +104,7 @@ describe("# ", function() {
 				var messages = 10;
 				var received = 0;
 
-				var sub = queue.subscribe('event', true, function(message) {
+				var sub = queue.subscribe('event', function(message) {
 					expect(message).to.equal('hello');
 					expect(received).to.be.below(messages);
 					received++;
@@ -119,6 +119,36 @@ describe("# ", function() {
 				for (var sent = 0; sent < messages; sent++) {
 					queue.publish('event', 'hello');
 				}
+			});
+		});
+	});
+
+	it('should be able to publish, receive, and respond to a message', function(done) {
+		var connection = mq.createConnection(CONNECTION);
+
+		connection.on('error', function(err) {
+			should.not.exist(err);
+			done();
+		});
+
+		connection.on('ready', function() {
+			connection.queue('test', function(err, queue) {
+				should.not.exist(err);
+				should.exist(queue);
+
+				var sub = queue.subscribe('event', function(message, callback) {
+					expect(message).to.equal('hello');
+					callback(null, message + ', world!');
+				});
+
+				should.exist(sub);
+
+				queue.publish('event', 'hello', function(err, result) {
+					should.not.exist(err);
+					expect(result).to.equal('hello, world!');
+					connection.close();
+					done();
+				});
 			});
 		});
 	});
