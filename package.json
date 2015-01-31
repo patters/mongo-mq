@@ -1,0 +1,24 @@
+{
+  "name": "mongo-mq",
+  "version": "1.0.0",
+  "description": "mongoDB message queue",
+  "main": "index.js",
+  "scripts": {
+    "test": "make test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/patters/mongo-mq.git"
+  },
+  "author": "Jason Patterson (https://github.com/patters)",
+  "license": "MIT",
+  "dependencies": {
+    "mubsub": "^1.0.4",
+    "node-uuid": "^1.4.2"
+  },
+  "devDependencies": {
+    "async": "^0.9.0",
+    "chai": "^1.10.0",
+    "mocha": "^2.0.1"
+  }
+}
