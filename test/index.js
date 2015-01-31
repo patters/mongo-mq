@@ -154,6 +154,66 @@ describe("# ", function() {
 		});
 	});
 
+	it('should be able to publish, receive, and respond to a message (no timeout)', function(done) {
+		var connection = mq.createConnection(CONNECTION);
+
+		connection.on('error', function(err) {
+			should.not.exist(err);
+			done();
+		});
+
+		connection.on('ready', function() {
+			connection.queue('test', function(err, queue) {
+				should.not.exist(err);
+				should.exist(queue);
+
+				var sub = queue.subscribe('event', function(message, callback) {
+					expect(message).to.equal('hello');
+					callback(null, message + ', world!');
+				});
+
+				should.exist(sub);
+
+				queue.publish({ event: 'event', timeout: 0 }, 'hello', function(err, result) {
+					should.not.exist(err);
+					expect(result).to.equal('hello, world!');
+					connection.close();
+					done();
+				});
+			});
+		});
+	});
+
+	it('should be able to publish, receive, and respond to a message (large timeout)', function(done) {
+		var connection = mq.createConnection(CONNECTION);
+
+		connection.on('error', function(err) {
+			should.not.exist(err);
+			done();
+		});
+
+		connection.on('ready', function() {
+			connection.queue('test', function(err, queue) {
+				should.not.exist(err);
+				should.exist(queue);
+
+				var sub = queue.subscribe('event', function(message, callback) {
+					expect(message).to.equal('hello');
+					callback(null, message + ', world!');
+				});
+
+				should.exist(sub);
+
+				queue.publish({ event: 'event', timeout: 1000 }, 'hello', function(err, result) {
+					should.not.exist(err);
+					expect(result).to.equal('hello, world!');
+					connection.close();
+					done();
+				});
+			});
+		});
+	});
+
 	it('should be able process messages once with multiple connections', function(done) {
 		var pubConnection = mq.createConnection(CONNECTION);
 		var subConnection1 = mq.createConnection(CONNECTION);
@@ -211,6 +271,42 @@ describe("# ", function() {
 					}
 				});
 			}
+		});
+	});
+
+	it('should be able to handle a timeout', function(done) {
+		var connection = mq.createConnection(CONNECTION);
+
+		connection.on('error', function(err) {
+			should.not.exist(err);
+			done();
+		});
+
+		connection.on('ready', function() {
+			connection.queue('test', function(err, queue) {
+				should.not.exist(err);
+				should.exist(queue);
+
+				var sub = queue.subscribe('event', function(message, callback) {
+					expect(message).to.equal('hello');
+					setTimeout(function() {
+						callback(null, message + ', world!');
+					}, 1000);
+				});
+
+				should.exist(sub);
+
+				queue.publish({ event: 'event', timeout: 500 }, 'hello', function(err, result) {
+					should.exist(err);
+					expect(err).to.be.an.instanceof(Error);
+					should.not.exist(result);
+					// Wait a bit to ensure message doesn't get received later
+					setTimeout(function() {
+						connection.close();
+						done();
+					}, 1000);
+				});
+			});
 		});
 	});
 });
