@@ -77,12 +77,48 @@ describe("# ", function() {
 
 				var sub = queue.subscribe('event', true, function(message) {
 					expect(message).to.equal('hello');
+					connection.close();
 					done();
 				});
 
 				should.exist(sub);
 
 				queue.publish('event', 'hello');
+			});
+		});
+	});
+
+	it('should be able to publish and receive messages', function(done) {
+		var connection = mq.createConnection(CONNECTION);
+
+		connection.on('error', function(err) {
+			should.not.exist(err);
+			done();
+		});
+
+		connection.on('ready', function() {
+			connection.queue('test', function(err, queue) {
+				should.not.exist(err);
+				should.exist(queue);
+
+				var messages = 10;
+				var received = 0;
+
+				var sub = queue.subscribe('event', true, function(message) {
+					expect(message).to.equal('hello');
+					expect(received).to.be.below(messages);
+					received++;
+					if (received === messages) {
+						connection.close();
+						done();
+					}
+				});
+
+				should.exist(sub);
+
+				for (var sent = 0; sent < messages; sent++) {
+					queue.publish('event', 'hello');
+				}
 			});
 		});
 	});
