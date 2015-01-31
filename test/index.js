@@ -37,4 +37,27 @@ describe("# ", function() {
 			});
 		});
 	});
+
+	it('should be able to create a subscription', function(done) {
+		var connection = mq.createConnection(CONNECTION);
+
+		connection.on('error', function(err) {
+			should.not.exist(err);
+			done();
+		});
+
+		connection.on('ready', function() {
+			connection.queue('test', function(err, queue) {
+				should.not.exist(err);
+				should.exist(queue);
+
+				var sub = queue.subscribe('event', true, function(message) {
+
+				});
+
+				should.exist(sub);
+				done();
+			});
+		});
+	});
 });
