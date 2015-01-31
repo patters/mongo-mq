@@ -20,4 +20,21 @@ describe("# ", function() {
 			done();
 		})
 	});
+
+	it('should be able to create a queue', function(done) {
+		var connection = mq.createConnection(CONNECTION);
+
+		connection.on('error', function(err) {
+			should.not.exist(err);
+			done();
+		});
+
+		connection.on('ready', function() {
+			connection.queue('test', function(err, queue) {
+				should.not.exist(err);
+				should.exist(queue);
+				done();
+			});
+		});
+	});
 });
