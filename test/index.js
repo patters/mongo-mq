@@ -5,7 +5,7 @@ var chai = require('chai'),
 	async = require('async'),
 	mq = require('../lib');
 
-var CONNECTION = 'mongodb://localhost:27017/mubsub_example';
+var CONNECTION = 'mongodb://localhost:27017/mongomq_test';
 
 describe("# ", function() {
 
@@ -241,33 +241,33 @@ describe("# ", function() {
 		}, function(err, queues) {
 			should.not.exist(err);
 
-			var got1, got2;
+			var got1 = 0, got2 = 0;
 
 			var sub1 = queues[1].subscribe('event', function(message, callback) {
-				expect(message).to.equal('hello');
-				got1 = true;
+				got1++;
 				callback(null, message + ', 1!');
 			});
 			var sub2 = queues[2].subscribe('event', function(message, callback) {
-				expect(message).to.equal('hello');
-				got2 = true;
+				got2++;
 				callback(null, message + ', 2!');
 			});
 
 			var messages = 1000;
 			var received = 0;
 			for (var sent = 0; sent < messages; sent++) {
-				queues[0].publish('event', 'hello', function(err, result) {
+				var message = 'hello (' + sent + ')';
+				queues[0].publish('event', message, function(err, result) {
 					should.not.exist(err);
-					expect(['hello, 1!', 'hello, 2!']).to.include(result);
 					expect(received).to.be.below(messages);
 					received++;
 					if (received === messages) {
-						expect(got1).to.be.true;
-						expect(got2).to.be.true;
+						expect(got1).to.be.above(0);
+						expect(got2).to.be.above(0);
 						// Wait a little more to ensure more messages don't come in
 						setTimeout(function() {
 							conns.forEach(function(c) { c.close(); });
+							expect(got1 + got2).to.equal(messages);
+							expect(received).to.equal(messages);
 							done();
 						}, 500);
 					}
